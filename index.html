@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình phát nhạc</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="./static/css/style.css">
+    <link rel="stylesheet" href="./static/lib/notification.css">
+</head>
+<body class="v-100 vh">
+    <main class="flex-col w-100 h-100">
+        <div id="overlay" class="pos-abs flex none">
+            <div class="box">
+                <h2>Vui lòng chờ...</h2>
+                <p id="status-download">Đang lưu thông tin</p>
+            </div>
+        </div>
+        <div id="main-page" class="pos-rel flex w-100 ">
+            
+            <header class="pos-abs">
+
+            </header>
+            <section id="col-l">
+                <ul id="home-btns" class="transition cur-pointer">
+                    <li class="sence-main-btn active">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Trang chủ</span>
+                    </li>
+                    <li class="sence-main-btn">
+                        <i class="fa-solid fa-book-open-reader"></i>
+                        <span>Thể loại</span>
+                    </li>
+                    <li  class="sence-main-btn">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Nhập thêm bài hát</span>
+                    </li>
+                </ul>
+                <div id="playlist-box">
+                    <div id="create-pl">
+                        Danh sách phát mới
+                    </div>
+                    <ul id="playlists" class="transition cur-pointer">
+                        <li class="pl-item">
+                            <div>Tình đầu</div>
+                            <div>Konnn</div>
+                        </li>
+                        <li class="pl-item">
+                            <div>Tình đầu</div>
+                            <div>Konnn</div>
+                        </li>
+                        <li class="pl-item">
+                            <div>Tình đầu</div>
+                            <div>Konnn</div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        
+            <section id="col-r" class="pos-rel">
+                <div id="sence0"></div>
+                <div id="sence1"></div>
+                <div id="sence2">
+                    <h1>NHẬP THÊM BÀI HÁT</h1>
+                    <div id="ip-info" class="flex">
+                        <div id="ip-col-l">
+                            <div id="ip-link-box" class="flex">
+                                <input type="text" name="ip-music" id="ip-in-link" placeholder="Dán link vào đây!">
+                                <button type="button" id="ip-in-confirm">Duyệt</button>
+                            </div>
+                            <div id="ip-details" class="ip-pre-flag">
+                                <h2 id="ip-pre-title">Để trái tim không</h2>
+                                <h4 id="ip-pre-uploader">Robin</h4>
+                                <h4 id="ip-pre-duration">0</h4>
+                                <div id="ip-tabs-box">
+                                    <div id="ip-tabs-btn">
+                                        <span class="active">Mô tả</span>
+                                        <span>Lời bản gốc</span>
+                                    </div>
+                                    <div id="ip-tabs-detail">
+                                        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Animi ratione sequi asperiores autem, dolorem, officiis molestiae enim accusamus vitae ex possimus optio ipsum nam assumenda harum quisquam illo corporis. Commodi?
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="ip-pre-flag" id="ip-col-r" >
+                            <iframe id="ytplayer" type="text/html" style="aspect-ratio: 16/9;width: 100%;"
+                            src="https://www.youtube.com/embed/S0h5yvN-b1Y?cc_load_policy=1&enablejsapi=1&modestbranding=1&color=white&iv_load_policy=3"
+                            frameborder="0" allowfullscreen></iframe>
+                            <div id="ip-setting-box">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div id="ip-download" class="ip-pre-flag">
+                        TẢI VỀ NGAY!
+                    </div>
+                </div>
+                <div id="p-main" class="transition flex">
+                    <div id="p-main-lyric-box">
+                        Chưa tải lời bài hát...
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div id="player">
+            <div id="prog-bar" class="cur-pointer transition">
+                <div id="prog-line"></div>
+                <div id="prog-hover" ></div>
+            </div>
+            <div id="control-player" class="flex">
+                <div id="control-zone" class="flex">
+                    <div class="ctrl-btn flex" id="back-ctrl">
+                        <i class="fa-solid fa-backward-step"></i>                        
+                    </div>
+                    <div class="ctrl-btn flex" id="play-ctrl">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="ctrl-btn flex" id="next-ctrl">
+                        <i class="fa-solid fa-forward-step"></i>
+                    </div>
+                    <div id="currentTime-player">
+                        <span>00:00 / 00:00</span>
+                    </div>
+                </div>
+                <div id="info-player" class="flex">
+                    <div id="info-thumb-box" class="flex">
+                        <img id="info-thumb" src="https://i3.ytimg.com/vi/S0h5yvN-b1Y/maxresdefault.jpg" alt="" srcset="">
+                    </div>
+                    <div class="">
+                        <div id="info-title">
+                            If I Can Stop One Heart From Breaking
+                        </div>
+                        <div id="info-uploader">
+                            <span>HoYoFEST</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="more-player" class="flex">
+                    <div id="vol-box" class="flex transition">
+                        <label for="volume">
+                            <i id="icon-vol" class="fa-solid fa-volume-high"></i>
+                        </label>
+                        <input type="range" name="" id="volume" value=".5" min="0" max="1" step=".1">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="./static/player.js"></script>
+    <script src="./static/lib/notification.js"></script>
+    <script src="./static/app.js"></script>
+</body>
+</html>
