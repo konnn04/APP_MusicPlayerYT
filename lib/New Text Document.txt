@@ -1,0 +1,1 @@
+yt-dlp --write-auto-sub --write-subs --sub-lang vi,en-US--sub-format vtt --convert-subs srt --skip-download --output test2.%(ext)s https://youtu.be/S0h5yvN-b1Y
