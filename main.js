@@ -25,7 +25,7 @@ const createWindow = () => {
     });
 
     // Không cần menu
-    // mainWin.removeMenu();
+    mainWin.removeMenu();
     mainWin.maximize();
     // Tải file html và hiển thị
     mainWin.loadFile("./index.html");

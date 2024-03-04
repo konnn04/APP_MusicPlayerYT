@@ -1,4 +1,5 @@
 const { execSync, execFile } = require('child_process');
+const langdetect = require('langdetect');
 const { translate }  = require('@vitalets/google-translate-api');
 const removeAccents = require('remove-accents');
 // const { translate } = require('google-translate-api-browser');
@@ -7,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const { split } = require('postcss/lib/list');
 const { error } = require('console');
+// const { document } = require('postcss');
 const wait = require('timers/promises').setTimeout;
 const LIB = {
     WIN : {
@@ -21,7 +23,8 @@ const player = new Player()
 const TEMP = {}
 const D = {}
 const infoFile = {}
-
+let playlist1 = []
+let playlist2 = []
 window.onload = async ()=>{
     await blinding();
     await initEvent();
@@ -46,9 +49,23 @@ window.onload = async ()=>{
         document.getElementById("p-main-lyric-box")
     )
     ALL_MUSIC = await scanAllMusic()
-    await wait(1000)
-    player.setPlaylist(ALL_MUSIC)
-    
+    // console.log(ALL_MUSIC)
+    playlist1 = ALL_MUSIC.filter(e=> e.lang == "ja")
+    // console.log(playlist1)
+    playlist2 = ALL_MUSIC.filter(e=> e.lang == "vi")
+    player.setPlaylist(ALL_MUSIC,0)
+    await initListBox(D.sence0,"Âm nhạc J-Pop",playlist1,"JPPlaylist",true)
+    await initListBox(D.sence0,"Âm nhạc V-Pop",playlist2,"VNPlaylist",true)
+    await initListBox(D.sence0,"Toàn bộ bài hát đang có",ALL_MUSIC,"allPlaylist",false)
+}
+
+async function updatePlaylist(){
+    playlist1 = ALL_MUSIC.filter(e=> e.lang == "ja")
+    // console.log(playlist1)
+    playlist2 = ALL_MUSIC.filter(e=> e.lang == "vi")
+    await initListBox(document.getElementById("JPPlaylist"),"Âm nhạc J-Pop",playlist1,undefined,true)
+    await initListBox(document.getElementById("VNPlaylist"),"Âm nhạc V-Pop",playlist2,undefined,true)
+    await initListBox(document.getElementById("allPlaylist"),"Toàn bộ bài hát đang có",ALL_MUSIC,undefined,false)
 }
 
 async function blinding() {
@@ -82,6 +99,7 @@ async function initEvent() {
     //Sence btn
     D.senceBtn.forEach((e,i) => {
         e.onclick = () =>{
+            D.playerMain.classList.remove("active")
             D.sence0.classList.remove("active")
             D.sence1.classList.remove("active")
             D.sence2.classList.remove("active")
@@ -181,7 +199,10 @@ async function initEvent() {
             wait(1000)
             player.setPlaylistNoReset(ALL_MUSIC)
             D.overlay.classList.add("none")
+            // await initListBox(document.getElementById("allPlaylist"),"Toàn bộ bài hát đang có",ALL_MUSIC)
 
+            //capnhat
+            await updatePlaylist()
         } catch (error) {
             console.log(error)
             D.overlay.classList.add("none")
@@ -196,6 +217,85 @@ async function initEvent() {
 
 }
 
+async function initListBox(dom,title,arrayMusic,id = undefined,onlyThisPL=false) {
+    if (arrayMusic.length==0) return
+    const list = document.createElement("div")
+    list.className = "main-list" 
+    list.id = id 
+    let html = ""
+    // console.log(arrayMusic)
+    arrayMusic.forEach((e,i)=>{
+        if (Array.isArray(e)) {
+            let t = "Danh sách phát của "
+            for (let i=0;i<Math.min(e.length,3);i++) {
+                t+=e[i].uploader+", "
+            }
+            t+="..."
+            html+=`
+                <li class="list-items flex-col" idMusic="${e[0].id}" index="0">
+                    <div class="play">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="thumb-box">
+                        <img src="./asset/media/thumbs/${e.id}.jpg" alt="" class="thumb">
+                    </div>
+                    <h3 class="title">${t}</h3>
+                    <h5 class="uploader">Playlist</h5>
+                </li>    
+                `
+        }else{
+            html+=`
+                <li class="list-items flex-col" idMusic="${e.id}" >
+                    <div class="play">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="thumb-box">
+                        <img src="./asset/media/thumbs/${e.id}.jpg" alt="" class="thumb">
+                    </div>
+                    <h3 class="title">${e.title}</h3>
+                    <h5 class="uploader">${e.uploader}</h5>
+                </li>    
+                `
+        }
+    })
+    
+    let d = []
+    if (id!=undefined) {
+        list.innerHTML=`
+            <h1>${title}</h1>
+            <ul class="list-box flex transition">
+                    ${html}
+            </ul>`
+        dom.appendChild(list)
+        d = Array.from(document.getElementById(id).getElementsByClassName("list-items"))
+    }else{
+        dom.innerHTML=`
+        <h1>${title}</h1>
+        <ul class="list-box flex transition">
+                ${html}
+        </ul>`
+        d = Array.from(dom.getElementsByClassName("list-items"))
+    }
+
+    d.forEach((e,i)=>{
+        e.onclick = ()=>{
+            
+            D.playerMain.classList.add("active")
+            if (Array.isArray(arrayMusic[i])) {
+                player.setPlaylist(arrayMusic[i],0)
+            }else{
+                if (onlyThisPL) {
+                    player.setPlaylist(arrayMusic,arrayMusic.indexOf(arrayMusic[i]))
+                }else{
+                    player.setPlaylist(ALL_MUSIC,ALL_MUSIC.indexOf(arrayMusic[i]))
+                }
+                
+            }
+            player.play()
+        }
+        
+    })
+}
 
 
 async function patchSub(text) {
@@ -215,7 +315,9 @@ async function patchSub(text) {
                 i++;
                 sub +=a[i] + "\n";                
             }
+            
             sub =removeNonAD(sub).trim()
+            sub=sub.replace('\n','</br>')
             if (!(sub==lastLyric)) {
                 arr.push([time,sub]);
             }                   
@@ -338,28 +440,32 @@ async function blindRef(text) {
 }
 
 async function scanAllMusic() {
-    try {
-        return new Promise(async (resolve, reject) => {
-            const pl = []
-            const pathFiles = path.join(__dirname,"/asset/media/infos")
-            const infoFiles = fs.readdirSync(pathFiles).filter(file => file.endsWith('.json'));
-            for (const file of infoFiles) {                
-                await fs.readFile(path.join(__dirname,"/asset/media/infos/"+file),"utf-8" ,async (err,data)=>{
+    const pl = []
+    return new Promise(async (resolve, reject) => {
+        
+        const pathFiles = path.join(__dirname,"/asset/media/infos")
+        const infoFiles = fs.readdirSync(pathFiles).filter(file => file.endsWith('.json'));
+        for (const file of infoFiles) {
+            pl.push(new Promise(async (resolve, reject) => {
+                fs.readFile(path.join(__dirname,"/asset/media/infos/"+file),"utf-8" ,async (err,data)=>{
                     if (err) {
                         reject(err)                        
                         return
                     }            
                     const af = await JSON.parse(data)
+                    af.lang=langdetect.detectOne(af.title)
+                    console.log(af.lang)
                     af.mLyric = await getSub(af.id) || []
-                    pl.push(af)
-                })
-            }
-            resolve(pl)
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        return [];
-    }    
+                    resolve(af)
+                    }
+                )
+            }))
+        }
+        Promise.all(pl)
+            .then(results => resolve(results))
+            .catch(error => reject(error));
+    })
+    
 }
 
 async function getSub(id,lang=null){

@@ -56,9 +56,13 @@ class Player extends Audio{
 
     refresh() {        
         this.DOMInfo.fullLyric.innerHTML = ""
-        this.playlist[this.index].mLyric.forEach(e => {
-            this.DOMInfo.fullLyric.innerHTML+=`<p>${e[1]}</p>` + "</br>"
-        });
+        console.log(this.playlist[this.index])
+        if (this.playlist[this.index].mLyric) {
+            this.playlist[this.index].mLyric.forEach(e => {
+                this.DOMInfo.fullLyric.innerHTML+=`<p>${e[1]}</p>` + "</br>"
+            });
+        }
+        
         this.allLine = Array.from (this.DOMInfo.fullLyric.querySelectorAll("p"))
         this.indexLyric = -1
         this.lineLight = 0
@@ -171,11 +175,15 @@ class Player extends Audio{
         this.DOMProg = dom
     }
 
-    setPlaylist(pl) {
+    setPlaylist(pl,index) {
         this.playlist = pl
+        this.index = index
+        this.pause()
         if (this.playlist.length != 0) {
-            this.src = `./asset/media/${this.playlist[0].id}.mp3`
+            this.src = `./asset/media/${this.playlist[index].id}.mp3`
         }
+        this.refresh()        
+
     }
 
     setPlaylistNoReset(pl) {

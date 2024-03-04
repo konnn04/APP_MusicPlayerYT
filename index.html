@@ -20,8 +20,16 @@
         </div>
         <div id="main-page" class="pos-rel flex w-100 ">
             
-            <header class="pos-abs">
-
+            <header class="pos-abs flex">
+                <logo>
+                    <h1>KonnnMusic</h1>
+                </logo>
+                <search-box class="flex">
+                    <input type="text" name="" id="">
+                    <button type="button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </search-box>
             </header>
             <section id="col-l">
                 <ul id="home-btns" class="transition cur-pointer">
@@ -60,7 +68,26 @@
             </section>
         
             <section id="col-r" class="pos-rel">
-                <div id="sence0"></div>
+                <div id="sence0" class="active">
+                    <div class="tags-box flex">
+                        <div class="kw-btn">
+                            Nhạc Nhật
+                        </div>
+                        <div class="kw-btn">
+                            Nhạc pallad
+                        </div>
+                        <div class="kw-btn">
+                            Nhạc yêu đời
+                        </div>
+                    </div>
+                    <h1>Chào mừng bạn trở lại!!!</h1>
+                    <!-- <div class="main-list">
+                        <h1>Lãng mạn</h1>
+                        <ul idclass="list-box flex transition">
+                                                      
+                        </ul>
+                    </div> -->
+                </div>
                 <div id="sence1"></div>
                 <div id="sence2">
                     <h1>NHẬP THÊM BÀI HÁT</h1>
@@ -144,7 +171,7 @@
                         <label for="volume">
                             <i id="icon-vol" class="fa-solid fa-volume-high"></i>
                         </label>
-                        <input type="range" name="" id="volume" value=".5" min="0" max="1" step=".1">
+                        <input type="range" name="" id="volume" value=".5" min="0" max="1" step=".05">
                         
                     </div>
                 </div>
