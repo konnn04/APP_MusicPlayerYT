@@ -1,0 +1,32 @@
+{
+  "appId": "com.konnn.app",
+  "productName": "KonnnMusic",
+  "directories": {
+    "output": "dist"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "/static/icon.ico"
+  },
+  
+  "files": [
+    "node_modules/**/*",
+    "static/**/*",
+    "lib/**/*",
+    "package.json",
+    "main.js",
+    "index.html"
+  ],
+  "extraResources": [{
+    "from": "static/lib/**/*",
+    "to": "/",
+  }],
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "konnn",
+      "repo": "konnn",
+      "releaseType": "draft"
+    }
+  ]
+}

@@ -1,11 +1,13 @@
-const { app, BrowserWindow, screen} = require("electron");
-const chokidar = require('chokidar');
+const { app, BrowserWindow, screen, ipcMain} = require("electron");
+const path = require('path');
+const fs = require('fs');
 let mainWin;
 const wait = require('timers/promises').setTimeout;
 
 /**
  * Hàm dùng để khởi tạo Window
  */
+
 const createWindow = () => {
     const displays = screen.getAllDisplays();
     const defaultDisplay = displays[0];
@@ -13,7 +15,7 @@ const createWindow = () => {
     mainWin = new BrowserWindow({
         width: 800,
         height: 650,
-        
+        icon: __dirname + "/static/icon.ico",
         x: defaultDisplay.bounds.x + 50, // Ví dụ: điều chỉnh vị trí x để cách mép màn hình 50px
         y: defaultDisplay.bounds.y + 50, // Ví dụ: điều chỉnh vị trí y để cách mép màn hình 50px
         // icon: "static/icon.jpeg",
@@ -25,7 +27,7 @@ const createWindow = () => {
     });
 
     // Không cần menu
-    mainWin.removeMenu();
+    // mainWin.removeMenu();
     mainWin.maximize();
     // Tải file html và hiển thị
     mainWin.loadFile("./index.html");
@@ -52,20 +54,45 @@ app.on("activate", () => {
 
 app.on('ready', () => {
     createWindow();
-
-    // // Theo dõi thay đổi trong thư mục dự án
-    // const watcher = chokidar.watch('.', {
-    //     ignored: /node_modules|[/\\]\./, // Bỏ qua thư mục node_modules và các tệp ẩn
-    //     persistent: true
-    // }); 
-
-    // // Xử lý sự kiện khi có tệp được thay đổi
-    // watcher.on('change', (filePath) => {
-    //     console.log('File changed:', filePath);
-    //     app.relaunch();
-    //     app.quit();
-    //     // app.quit();
-        
-        
-    // });
+    initFolder(["asset","asset/media/","asset/media/infos","asset/media/subs","asset/media/thumbs","lib/"])
+    copyFileLib()
 });
+
+// const pathAppCustom = path.dirname(app.getPath("exe"))
+const pathAppCustom = app.getAppPath()
+
+
+function initFolder(arrayPath) {
+    arrayPath.forEach((e,i) => {
+        if (!fs.existsSync(path.join(pathAppCustom,e))) {
+            try {
+                fs.mkdirSync(path.join(pathAppCustom,e),{ recursive: true });
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    });
+}
+
+
+ipcMain.on('getApp', (event) => {
+    event.returnValue = pathAppCustom;
+});
+
+function copyFileLib() {
+    if (!fs.existsSync(path.join(pathAppCustom,"/lib/yt-dlp.exe"))) {
+        try {
+            fs.copyFile(path.join(app.getAppPath(),"/lib/yt-dlp.exe"), path.join(pathAppCustom,"/lib/yt-dlp.exe"), ()=>{});
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    if (!fs.existsSync(path.join(pathAppCustom,"/lib/ffmpeg.exe"))) {
+        try {
+            fs.copyFile(path.join(app.getAppPath(),"/lib/ffmpeg.exe"), path.join(pathAppCustom,"/lib/ffmpeg.exe"),()=>{});
+        } catch (error) {
+            console.log(error)
+        }
+    }
+}

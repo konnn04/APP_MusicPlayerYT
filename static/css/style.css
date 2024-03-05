@@ -373,6 +373,7 @@ ul li:hover{
 #control-player{
     height: 100%;
     justify-content: space-between;
+    
 }
 
 #control-player>*{
@@ -483,6 +484,7 @@ ul li:hover{
     background-color: var(--bg);
     top: 100%;
     opacity: 0;
+    gap: 2rem;
 }
 
 #p-main.active{
@@ -490,14 +492,73 @@ ul li:hover{
     opacity: 1;
 }
 
-#p-main-lyric-box{
-    position: relative;
-    min-width: 300px;
-    width: 40%;
-    font-size: 1.6rem;
-    overflow-y: auto;
+#p-main-show{
     height: 80%;
+    flex: .4;
+    min-width: 300px;
+}
+
+#p-main-show-change-mod{
+    width: 100%;
+    height: fit-content;
     text-align: center;
+    /* border-bottom: 1px solid var(--text); */
+    font-weight: 500;
+    padding: 10px;
+    cursor: pointer;
+}
+
+#p-main-show-container{
+    width: 100%;
+    /* padding: 2rem; */
+    box-sizing: border-box;
+    flex: 1;
+    max-height: 100%;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    position: relative;
+}
+
+#p-main-show-container-wide{
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    flex-wrap: nowrap;
+    justify-content: start;
+    width: 200%;
+}
+
+#p-main-show-container.active #p-main-show-container-wide{
+    left: -100%;
+}
+
+#p-main-lyric-box,
+#p-main-thumb-box{
+    position: relative;
+    width: 50%;
+    font-size: 1.4rem;
+    overflow-y: auto;
+    height: 100%;
+    text-align: center;
+    padding: 2rem;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+#p-main-thumb-box{
+    padding: 0;
+    overflow: hidden;
+}
+
+#p-main-thumb{
+    aspect-ratio: 1;
+    width: 80%;
+    overflow: hidden;
+}
+
+#p-main-thumb-box img{
+    height: 100%;
 }
 
 #p-main-lyric-box p{
@@ -515,6 +576,76 @@ ul li:hover{
     opacity: 1;
     font-weight: 500;
     text-shadow: 1px 1px 10px #fff;
+}
+
+#p-main-playlist{
+    flex: 0.4;
+    height: 70%;
+    min-width: 300px;
+    min-height: 400px;
+
+}
+
+#p-main-pl-box{
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.p-main-pl-item{
+    height: 60px;
+    margin-bottom: 5px;
+    width: 100%;
+    padding: 0 10px;
+    margin: 0;
+    justify-content: start;
+    gap: 10px;
+    cursor: pointer;
+    opacity: .5;
+}
+
+.p-main-pl-item.active{
+    opacity: 1;
+}
+
+.p-main-pl-item-thumb-box{
+    aspect-ratio: 1;
+    height: 90%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.p-main-pl-item-info{
+    flex: 1;
+    height: 100%;
+    align-items: start;
+    max-width: calc(100% - 120px);
+    overflow: hidden;
+}
+
+.p-main-pl-item-info h5{
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+}
+
+.p-main-pl-item-info h6{
+    margin: 0;
+    font-weight: 400;
+    opacity: .8;
+}
+
+.p-main-pl-item-dur{
+    font-size: .8rem;
+    opacity: .8;
+    width: 50px;
+    height: 100%;
+}
+
+.p-main-pl-item-thumb-box img{
+    height: 100%;
 }
 
 /* #p-main-lyric-box::before,

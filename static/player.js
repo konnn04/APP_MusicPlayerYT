@@ -1,3 +1,9 @@
+const { ipcRenderer } = require('electron');
+const path = require('path');
+const fs = require('fs');
+// const app = ipcRenderer.sendSync('getApp');
+const pathApp = ipcRenderer.sendSync('getApp')
+
 class Player extends Audio{
     playlist = [];
     
@@ -6,7 +12,7 @@ class Player extends Audio{
         this.volume = 0.5
         this.playlist = pl
         if (pl.length != 0) {
-            this.src =`./asset/media/${this.playlist[0].id}.mp3`
+            this.src = path.join(pathApp,`./asset/media/${this.playlist[0].id}.mp3`)
         }
         document.onkeydown = (e)=>{
             // console.log(e.key)
@@ -34,7 +40,8 @@ class Player extends Audio{
         title:{},
         uploader:{},
         lyricLive:{},
-        fullLyric:{}
+        fullLyric:{},
+        thumbMain:{},
     }
     DOMCtrl = {
         play: {},
@@ -44,7 +51,8 @@ class Player extends Audio{
         progLine: {},
         progLive: {},
         volume: {},
-        icoVolume: {}
+        icoVolume: {},
+        playlist: {},
         
     }
     indexLyric = -1
@@ -55,8 +63,9 @@ class Player extends Audio{
 
 
     refresh() {        
+        
         this.DOMInfo.fullLyric.innerHTML = ""
-        console.log(this.playlist[this.index])
+        // console.log(this.playlist[this.index])
         if (this.playlist[this.index].mLyric) {
             this.playlist[this.index].mLyric.forEach(e => {
                 this.DOMInfo.fullLyric.innerHTML+=`<p>${e[1]}</p>` + "</br>"
@@ -96,7 +105,7 @@ class Player extends Audio{
             this.lineLight = this.indexLyric
             this.allLine[this.lineLight].classList.add("light")
             let pos = this.allLine[this.lineLight].offsetTop - this.DOMInfo.fullLyric.offsetHeight / 2
-            if (Math.abs(this.DOMInfo.fullLyric.scrollTop - pos) < 200) {
+            if (Math.abs(this.DOMInfo.fullLyric.scrollTop - pos) < 300) {
                 this.DOMInfo.fullLyric.scrollTop = pos
             }
         }
@@ -125,17 +134,29 @@ class Player extends Audio{
         if (index<0) {
             this.pause()
             this.index = (this.index - 1 < 0)?this.playlist.length-1:this.index - 1
-            this.src = `./asset/media/${this.playlist[this.index].id}.mp3`
+            this.src = path.join(pathApp,`./asset/media/${this.playlist[this.index].id}.mp3`)
             this.play()
             this.refresh()
         }
         if (index>0) {
             this.pause()
             this.index = (this.index + 1 > this.playlist.length-1 )?0:this.index + 1
-            this.src = `./asset/media/${this.playlist[this.index].id}.mp3`
+            this.src = path.join(pathApp,`./asset/media/${this.playlist[this.index].id}.mp3`)
             this.play()
             this.refresh()
         }
+        this.DOMCtrl.plitem.forEach((ee)=>{
+            ee.classList.remove("active")
+        })
+        this.DOMCtrl.plitem[this.index].classList.add("active")
+    }
+
+    changePlayPL(index) {
+        this.pause()
+        this.index = index
+        this.src = path.join(pathApp,`./asset/media/${this.playlist[this.index].id}.mp3`)
+        this.play()
+        this.refresh()
     }
 
     play() {
@@ -144,8 +165,11 @@ class Player extends Audio{
         this.DOMCtrl.icon.className = "fa-solid fa-pause"
 
         if ("src" in this.DOMInfo.thumb) {
-            this.DOMInfo.thumb.src = `./asset/media/thumbs/${this.playlist[this.index].id}.jpg`
-            
+            this.DOMInfo.thumb.src = path.join(pathApp,`./asset/media/thumbs/${this.playlist[this.index].id}.jpg`)            
+        }
+
+        if ("src" in this.DOMInfo.thumbMain) {
+            this.DOMInfo.thumbMain.src = path.join(pathApp,`./asset/media/thumbs/${this.playlist[this.index].id}.jpg`)            
         }
 
         if ("innerText" in this.DOMInfo.title) {
@@ -177,20 +201,22 @@ class Player extends Audio{
 
     setPlaylist(pl,index) {
         this.playlist = pl
+        
         this.index = index
         this.pause()
         if (this.playlist.length != 0) {
-            this.src = `./asset/media/${this.playlist[index].id}.mp3`
+            this.src = path.join(pathApp,`./asset/media/${this.playlist[index].id}.mp3`)
         }
         this.refresh()        
-
+        this.initPlaylist(this.DOMCtrl.playlist,pl,this.index)
     }
 
-    setPlaylistNoReset(pl) {
+    setPlaylistNoReset(pl) {        
         this.playlist = pl
+        this.initPlaylist(this.DOMCtrl.playlist,pl,this.index)
     }
     
-    setDOMCtrl(play={},back={},next={},progLine = {},progHover={},volume = {},icoVolume = {}) {
+    setDOMCtrl(play={},back={},next={},progLine = {},progHover={},volume = {},icoVolume = {},playlist = {}) {
         this.DOMCtrl.play = play
         this.DOMCtrl.back = back
         this.DOMCtrl.next = next
@@ -198,6 +224,7 @@ class Player extends Audio{
         this.DOMCtrl.progHover = progHover
         this.DOMCtrl.volume = volume
         this.DOMCtrl.icoVolume = icoVolume
+        this.DOMCtrl.playlist = playlist
 
         try {
             this.DOMCtrl.icon = this.DOMCtrl.play.querySelector("i")
@@ -263,14 +290,19 @@ class Player extends Audio{
 
     }
 
-    setDOMInfo(thumb={},title={},uploader={},lyricLive = {}, fullLyric={}) {
+    setDOMInfo(thumb={},title={},uploader={},lyricLive = {}, fullLyric={},thumbMain = {}) {
         this.DOMInfo.thumb = thumb
+        this.DOMInfo.thumbMain = thumbMain
         this.DOMInfo.title = title
         this.DOMInfo.uploader =uploader
         this.DOMInfo.lyricLive =lyricLive
         this.DOMInfo.fullLyric =fullLyric
 
         if ("src" in this.DOMInfo.thumb) {
+            // this.DOMInfo.thumb.src = `./asset/media/thumbs/${this.playlist[this.index].id}.jpg`
+        }
+
+        if ("src" in this.DOMInfo.thumbMain) {
             // this.DOMInfo.thumb.src = `./asset/media/thumbs/${this.playlist[this.index].id}.jpg`
         }
 
@@ -286,6 +318,37 @@ class Player extends Audio{
             
         }
 
+    }
+
+    initPlaylist(dom,pl,index) {
+        let html = ``
+        pl.forEach((e,i)=>{
+            html+=`    
+            <li class="flex p-main-pl-item ${index == i?"active":""}">
+                <div class="flex p-main-pl-item-thumb-box">
+                    <img src="${path.join(pathApp,`./asset/media/thumbs/${e.id}.jpg`)}" alt="" srcset="">
+                </div>
+                <div class="flex-col p-main-pl-item-info">
+                    <h5>${e.title}</h5>
+                    <h6>${e.uploader}</h6>
+                </div>
+                <div class="flex p-main-pl-item-dur">
+                    <p>${convertTime(e.duration)}</p>
+                </div>
+            </li>`
+        })
+        dom.innerHTML=html
+    
+        this.DOMCtrl.plitem = Array.from(document.querySelectorAll(".p-main-pl-item"))    
+        this.DOMCtrl.plitem.forEach((e,i)=>{
+            e.onclick = ()=>{
+                this.changePlayPL(i)
+                this.DOMCtrl.plitem.forEach((ee)=>{
+                    ee.classList.remove("active")
+                })
+                e.classList.add("active")
+            }
+        })
     }
     
 }
@@ -303,3 +366,4 @@ function convertToSecord(ss) {
     let h = parseInt(ss.substring(0,2))
     return s + m*60.0 + h * 3600.0
 }
+

@@ -1,20 +1,17 @@
 const { execSync, execFile } = require('child_process');
 const langdetect = require('langdetect');
-const { translate }  = require('@vitalets/google-translate-api');
+// const { translate }  = require('@vitalets/google-translate-api');
 const removeAccents = require('remove-accents');
 // const { translate } = require('google-translate-api-browser');
 const axios = require('axios');
-const path = require('path');
-const fs = require('fs');
-const { split } = require('postcss/lib/list');
-const { error } = require('console');
+// const path = require('path');
+// const fs = require('fs');
 // const { document } = require('postcss');
 const wait = require('timers/promises').setTimeout;
 const LIB = {
     WIN : {
-        ytdlp : path.resolve(__dirname, 'lib/yt-dlp.exe'),
-        ffmpeg : path.resolve(__dirname, 'lib/ffmpeg.exe'),
-        
+        ytdlp : path.resolve(pathApp, 'lib/yt-dlp.exe'),
+        ffmpeg : path.resolve(pathApp, 'lib/ffmpeg.exe'),        
     }
 }
 
@@ -25,10 +22,10 @@ const D = {}
 const infoFile = {}
 let playlist1 = []
 let playlist2 = []
+let playlist3 = []
 window.onload = async ()=>{
     await blinding();
     await initEvent();
-    
     
     player.setDOMTimer(document.getElementById("currentTime-player"))
     player.setDOMProg(document.getElementById("prog-line"))
@@ -40,32 +37,42 @@ window.onload = async ()=>{
         document.getElementById("prog-hover"),
         document.getElementById("volume"),
         document.getElementById("icon-vol"),
+        document.getElementById("p-main-pl-box"),
     )
     player.setDOMInfo(
         document.getElementById("info-thumb"),
         document.getElementById("info-title"),
         document.getElementById("info-uploader"),
         document.getElementById("p-main-lyric-box"),
-        document.getElementById("p-main-lyric-box")
+        document.getElementById("p-main-lyric-box"),
+        document.getElementById("p-main-thumb-img"),
     )
-    ALL_MUSIC = await scanAllMusic()
-    // console.log(ALL_MUSIC)
-    playlist1 = ALL_MUSIC.filter(e=> e.lang == "ja")
-    // console.log(playlist1)
-    playlist2 = ALL_MUSIC.filter(e=> e.lang == "vi")
+    await initPlaylist()
     player.setPlaylist(ALL_MUSIC,0)
-    await initListBox(D.sence0,"Âm nhạc J-Pop",playlist1,"JPPlaylist",true)
-    await initListBox(D.sence0,"Âm nhạc V-Pop",playlist2,"VNPlaylist",true)
-    await initListBox(D.sence0,"Toàn bộ bài hát đang có",ALL_MUSIC,"allPlaylist",false)
+    
 }
 
-async function updatePlaylist(){
-    playlist1 = ALL_MUSIC.filter(e=> e.lang == "ja")
-    // console.log(playlist1)
-    playlist2 = ALL_MUSIC.filter(e=> e.lang == "vi")
-    await initListBox(document.getElementById("JPPlaylist"),"Âm nhạc J-Pop",playlist1,undefined,true)
-    await initListBox(document.getElementById("VNPlaylist"),"Âm nhạc V-Pop",playlist2,undefined,true)
-    await initListBox(document.getElementById("allPlaylist"),"Toàn bộ bài hát đang có",ALL_MUSIC,undefined,false)
+async function removePlaylist() {
+    D.PL.forEach((e,i)=>{
+        document.getElementById(e).remove()
+    })
+}
+
+async function initPlaylist(){
+    D.PL = []
+    ALL_MUSIC = await scanAllMusic()
+    playlist1 = ALL_MUSIC.filter(e=> e.lang == "ja").sort(() => Math.random() - 0.5)
+    playlist2 = ALL_MUSIC.filter(e=> e.lang == "vi").sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5)
+    playlist3 = ALL_MUSIC.filter(e=> e.lang == "en").sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5)
+    let f0 = await initListBox(D.sence0,"Âm nhạc J-Pop",playlist1,"JPPlaylist",true)
+    let f1 =await initListBox(D.sence0,"Âm nhạc V-Pop",playlist2,"VNPlaylist",true)
+    let f2 =await initListBox(D.sence0,"Âm nhạc US-UK",playlist3,"ENPlaylist",true)
+    let f3 =await initListBox(D.sence0,"Toàn bộ bài hát đang có",ALL_MUSIC,"allPlaylist",false)
+    if (f0){D.PL.push("JPPlaylist")}
+    if (f1){D.PL.push("VNPlaylist")}
+    if (f2){D.PL.push("ENPlaylist")}
+    if (f3){D.PL.push("allPlaylist")}
+    
 }
 
 async function blinding() {
@@ -91,6 +98,7 @@ async function blinding() {
    D.infoPlayer = document.getElementById("info-player")
    D.playerMain = document.getElementById("p-main")
    D.playerMainLyricBox = document.getElementById("p-main-lyric-box")
+   D.playerMainSwitchLyric = document.getElementById("p-main-show-change-mod")
 }
 
 
@@ -156,32 +164,25 @@ async function initEvent() {
             
             await save2Json(
                 TEMP.infoVideoPreview,
-                path.join(__dirname,`/asset/media/infos/${TEMP.infoVideoPreview.id}.json`)
+                path.join(pathApp,`/asset/media/infos/${TEMP.infoVideoPreview.id}.json`)
                 
             )
-            await downloadImg(TEMP.infoVideoPreview.id)
+            await downloadImg(TEMP.infoVideoPreview.thumbnail,TEMP.infoVideoPreview.id )
+            // console.log(TEMP.infoVideoPreview)
             //phase2
             D.ipStatusDownload.innerText = "Đang tải lời bài hát (nếu có)..."
-            if (
-                !fs.existsSync(`/asset/media/subs/${TEMP.infoVideoPreview.id}.vi.srt`)&&
-                !fs.existsSync(`/asset/media/subs/${TEMP.infoVideoPreview.id}.en.srt`)&&
-                !fs.existsSync(`/asset/media/subs/${TEMP.infoVideoPreview.id}.en-US.srt`)&&
-                !fs.existsSync(`/asset/media/subs/${TEMP.infoVideoPreview.id}.jp.srt`)
-            ) {
-                await downSubsVideo(TEMP.infoVideoPreview.id)
-            }else{
-                createNotification({
-                    "title":"Lời bài hát đã tồn tại",
-                    "detail":"Hệ thống sẽ không tải lại nữa...",
-                    "type":"warning" //right, wrong, warning
-                },3000)
-            }
+            await downSubsVideo(TEMP.infoVideoPreview.id)
             //phase3
             D.ipStatusDownload.innerText = "Đang tải âm thanh..."
             if (
-                !fs.existsSync(`/asset/media/${TEMP.infoVideoPreview.id}.mp3`)
+                !fs.existsSync(path.join(pathApp,`/asset/media/${TEMP.infoVideoPreview.id}.mp3`))
             ) {
                 await downAudioVideo(TEMP.infoVideoPreview.id)
+                createNotification({
+                    "title":"Tải thành công!",
+                    "detail":"Danh sách sẽ tự động làm mới!",
+                    "type":"right" //right, wrong, warning
+                },3000)
             }else{
                 createNotification({
                     "title":"File âm thanh đã tồn tại",
@@ -190,19 +191,12 @@ async function initEvent() {
                 },3000)
             }
 
-            createNotification({
-                "title":"Tải thành công!",
-                "detail":"Danh sách sẽ tự động làm mới!",
-                "type":"right" //right, wrong, warning
-            },3000)
-            ALL_MUSIC = await scanAllMusic()
+            removePlaylist()
+            await initPlaylist()
             wait(1000)
             player.setPlaylistNoReset(ALL_MUSIC)
             D.overlay.classList.add("none")
-            // await initListBox(document.getElementById("allPlaylist"),"Toàn bộ bài hát đang có",ALL_MUSIC)
-
-            //capnhat
-            await updatePlaylist()
+            
         } catch (error) {
             console.log(error)
             D.overlay.classList.add("none")
@@ -213,12 +207,21 @@ async function initEvent() {
             },3000)
         }
     }
-
+    D.playerMainSwitchLyric.onclick = ()=>{
+        let k = document.getElementById("p-main-show-container")
+        k.classList.toggle("active")
+        
+        if (k.classList.contains("active")) {
+            D.playerMainSwitchLyric.innerText = "Trở lại"
+        }else{
+            D.playerMainSwitchLyric.innerText = "Lyric"
+        }
+    }
 
 }
 
 async function initListBox(dom,title,arrayMusic,id = undefined,onlyThisPL=false) {
-    if (arrayMusic.length==0) return
+    if (arrayMusic.length==0) return false
     const list = document.createElement("div")
     list.className = "main-list" 
     list.id = id 
@@ -237,7 +240,7 @@ async function initListBox(dom,title,arrayMusic,id = undefined,onlyThisPL=false)
                         <i class="fa-solid fa-play"></i>
                     </div>
                     <div class="thumb-box">
-                        <img src="./asset/media/thumbs/${e.id}.jpg" alt="" class="thumb">
+                        <img src="${path.join(pathApp,`./asset/media/thumbs/${e.id}.jpg`)}" alt="" class="thumb">
                     </div>
                     <h3 class="title">${t}</h3>
                     <h5 class="uploader">Playlist</h5>
@@ -250,7 +253,7 @@ async function initListBox(dom,title,arrayMusic,id = undefined,onlyThisPL=false)
                         <i class="fa-solid fa-play"></i>
                     </div>
                     <div class="thumb-box">
-                        <img src="./asset/media/thumbs/${e.id}.jpg" alt="" class="thumb">
+                        <img src="${path.join(pathApp,`./asset/media/thumbs/${e.id}.jpg`)}" alt="" class="thumb">
                     </div>
                     <h3 class="title">${e.title}</h3>
                     <h5 class="uploader">${e.uploader}</h5>
@@ -295,6 +298,7 @@ async function initListBox(dom,title,arrayMusic,id = undefined,onlyThisPL=false)
         }
         
     })
+    return true
 }
 
 
@@ -376,7 +380,7 @@ async function downSubsVideo(id) {
                 "--convert-subs", "srt",
                 `--skip-download`,
                 "--output",
-                `/asset/media/subs/${id}.%(ext)s`,
+                path.join(pathApp,"/asset/media/subs/${id}.%(ext)s"),
                 `https://youtu.be/${id}`],
                 (error, stdout, stderr) => {
                     if (error) {
@@ -406,6 +410,7 @@ function save2Json(videoInfo, filePath) {
 }
 
 async function downAudioVideo(id) {
+   
     try {
         return new Promise((resolve, reject) => {
             execFile(LIB.WIN.ytdlp, [
@@ -413,7 +418,7 @@ async function downAudioVideo(id) {
                 '--no-playlist',
                 '--audio-format', 'mp3',
                 '--format', 'bestaudio/best',
-                '--output', `/asset/media/${id}.%(ext)s`,
+                '--output', path.join(pathApp,`asset/media/${id}.%(ext)s`),
                 `https://youtu.be/${id}`
             ], (error, stdout, stderr) => {
                 if (error) {
@@ -441,20 +446,20 @@ async function blindRef(text) {
 
 async function scanAllMusic() {
     const pl = []
-    return new Promise(async (resolve, reject) => {
-        
-        const pathFiles = path.join(__dirname,"/asset/media/infos")
+    
+    return new Promise(async (resolve, reject) => {        
+        const pathFiles = path.join(pathApp,"/asset/media/infos")
         const infoFiles = fs.readdirSync(pathFiles).filter(file => file.endsWith('.json'));
         for (const file of infoFiles) {
             pl.push(new Promise(async (resolve, reject) => {
-                fs.readFile(path.join(__dirname,"/asset/media/infos/"+file),"utf-8" ,async (err,data)=>{
+                fs.readFile(path.join(pathApp,"/asset/media/infos/"+file),"utf-8" ,async (err,data)=>{
                     if (err) {
                         reject(err)                        
                         return
                     }            
                     const af = await JSON.parse(data)
-                    af.lang=langdetect.detectOne(af.title)
-                    console.log(af.lang)
+                    af.lang= af.language || langdetect.detectOne(af.description)
+                    // console.log(af.lang)
                     af.mLyric = await getSub(af.id) || []
                     resolve(af)
                     }
@@ -469,12 +474,13 @@ async function scanAllMusic() {
 }
 
 async function getSub(id,lang=null){
+    
     try {
         return new Promise(async (resolve, reject) => {
             for (let i of (lang)?[lang]:["vi","en-US","en","jp"]) {
-                const pathSub = fs.existsSync(path.resolve(__dirname,`asset/media/subs/${id}.${i}.srt`))
+                const pathSub = fs.existsSync(path.resolve(pathApp,`asset/media/subs/${id}.${i}.srt`))
                 if (pathSub) {
-                    fs.readFile(path.resolve(__dirname,`asset/media/subs/${id}.${i}.srt`), 'utf8',async  (err, data) => {
+                    fs.readFile(path.resolve(pathApp,`asset/media/subs/${id}.${i}.srt`), 'utf8',async  (err, data) => {
                         if (err) {
                             
                             console.error('Error:', err);
@@ -502,20 +508,21 @@ function removeNonAD(str) {
     return str.replace(/[^\w\s\n\u4E00-\u9FA5\u3040-\u309F\u30A0-\u30FF\u00C0-\u1FFF.,?!";:']/g, '');
 }
 
-async function downloadImg(id) {
-    await axios.get(`https://i3.ytimg.com/vi/${id}/maxresdefault.jpg`, { responseType: 'arraybuffer' })
+async function downloadImg(link,id) {
+    await axios.get(link, { responseType: 'arraybuffer' })
     .then(response => {
       const imageData = Buffer.from(response.data, 'binary');
   
       // Đường dẫn và tên file để lưu ảnh xuống ổ đĩa
-      const filePath = path.join(__dirname,`/asset/media/thumbs/${id}.jpg`);
+      const filePath = path.join(pathApp,`asset/media/thumbs/${id}.jpg`);
   
       // Ghi dữ liệu ảnh vào file
+      
       fs.writeFile(filePath, imageData, 'binary', async (err) => {
         if (err) {
           console.error('Lỗi khi ghi file:', err);
         } else {
-          console.log('Ảnh đã được lưu thành công!');
+        //   console.log('Ảnh đã được lưu thành công!');
         }
       });
     })
@@ -523,3 +530,4 @@ async function downloadImg(id) {
       console.error('Lỗi khi tải ảnh:', error);
     });
 }
+
