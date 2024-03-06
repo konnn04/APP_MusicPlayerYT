@@ -52,21 +52,17 @@ app.on("activate", () => {
     }
 });
 
-app.on('ready', () => {
-    createWindow();
-    initFolder(["asset","asset/media/","asset/media/infos","asset/media/subs","asset/media/thumbs","lib/"])
-    copyFileLib()
-});
 
-// const pathAppCustom = path.dirname(app.getPath("exe"))
-const pathAppCustom = app.getAppPath()
+
+const pathAppCustom = path.dirname(app.getPath("exe"))
+// const pathAppCustom = app.getAppPath()
 
 
 function initFolder(arrayPath) {
     arrayPath.forEach((e,i) => {
-        if (!fs.existsSync(path.join(pathAppCustom,e))) {
+        if (!fs.existsSync(e)) {
             try {
-                fs.mkdirSync(path.join(pathAppCustom,e),{ recursive: true });
+                fs.mkdirSync(path.join(e),{ recursive: true });
             } catch (error) {
                 console.log(error)
             }
@@ -77,6 +73,11 @@ function initFolder(arrayPath) {
 
 ipcMain.on('getApp', (event) => {
     event.returnValue = pathAppCustom;
+});
+
+const pathUserMusic = app.getPath("music")
+ipcMain.on('getMusicUser', (event) => {
+    event.returnValue = path.join(pathUserMusic,"KonnnMusic");
 });
 
 function copyFileLib() {
@@ -96,3 +97,14 @@ function copyFileLib() {
         }
     }
 }
+
+app.on('ready', () => {
+    createWindow();
+    initFolder([
+        pathUserMusic,       
+        path.join(pathUserMusic,"infos"),
+        path.join(pathUserMusic,"subs"),
+        path.join(pathUserMusic,"thumbs"),
+        path.join(pathAppCustom,"lib")])
+    copyFileLib()
+});

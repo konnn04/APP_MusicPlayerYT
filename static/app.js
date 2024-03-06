@@ -86,6 +86,7 @@ async function blinding() {
     //IMPORT VIDEO
     D.ipInputLink = document.getElementById("ip-in-link")
     D.ipInputConfirm = document.getElementById("ip-in-confirm")
+    D.ipInputCheckPL = document.getElementById("ip-link-check")
     D.ipInfoTitle = document.getElementById("ip-pre-title")
     D.ipInfoUploader = document.getElementById("ip-pre-uploader")
     D.ipInfoDuration = document.getElementById("ip-pre-duration")
@@ -130,7 +131,7 @@ async function initEvent() {
         }
         D.ipInputConfirm.classList.add("none")
         let link = D.ipInputLink.value.trim()
-        const dataInfo = await downInfoVideo(link)
+        const dataInfo = await downInfoVideo(link,D.ipInputCheckPL.checked)
         
         if (!dataInfo) {
             alert("Link không hợp lệ!")
@@ -138,18 +139,18 @@ async function initEvent() {
             TEMP.flagVideoPreview = false
             return
         }
-        TEMP.infoVideoPreview = dataInfo
+        TEMP.infoVideoPreview = dataInfo[0]
         TEMP.flagVideoPreview = true
         //Hiện lên
         for (let i of Array.from(D.ipFlag)) {
             i.style.display = "inherit"
         }
         //Nạp thông tin
-        D.ipInfoTitle.innerText = dataInfo.title
-        D.ipInfoUploader.innerText = dataInfo.uploader
-        D.ipInfoDuration.innerText = "Thời lượng: " + convertTime(dataInfo.duration)
-        D.ipFramePreview.src = `https://www.youtube.com/embed/${dataInfo.id}?autoplay=1&cc_load_policy=1&enablejsapi=1&modestbranding=1&color=white&iv_load_policy=3`
-        detailDeSub.des = await blindRef(dataInfo.description)
+        D.ipInfoTitle.innerText = dataInfo[0].title
+        D.ipInfoUploader.innerText = dataInfo[0].uploader
+        D.ipInfoDuration.innerText = "Thời lượng: " + convertTime(dataInfo[0].duration)
+        D.ipFramePreview.src = `https://www.youtube.com/embed/${dataInfo[0].id}?autoplay=0&cc_load_policy=1&enablejsapi=1&modestbranding=1&color=white&iv_load_policy=3`
+        detailDeSub.des = await blindRef(dataInfo[0].description)
         D.ipInfoDescription.innerHTML = detailDeSub.des
         //Bật lại nút
         D.ipInputConfirm.classList.remove("none")       
@@ -164,7 +165,7 @@ async function initEvent() {
             
             await save2Json(
                 TEMP.infoVideoPreview,
-                path.join(pathApp,`/asset/media/infos/${TEMP.infoVideoPreview.id}.json`)
+                path.join(pathMusicUser,`infos/${TEMP.infoVideoPreview.id}.json`)
                 
             )
             await downloadImg(TEMP.infoVideoPreview.thumbnail,TEMP.infoVideoPreview.id )
@@ -175,7 +176,7 @@ async function initEvent() {
             //phase3
             D.ipStatusDownload.innerText = "Đang tải âm thanh..."
             if (
-                !fs.existsSync(path.join(pathApp,`/asset/media/${TEMP.infoVideoPreview.id}.mp3`))
+                !fs.existsSync(path.join(pathMusicUser,`${TEMP.infoVideoPreview.id}.mp3`))
             ) {
                 await downAudioVideo(TEMP.infoVideoPreview.id)
                 createNotification({
@@ -240,7 +241,7 @@ async function initListBox(dom,title,arrayMusic,id = undefined,onlyThisPL=false)
                         <i class="fa-solid fa-play"></i>
                     </div>
                     <div class="thumb-box">
-                        <img src="${path.join(pathApp,`./asset/media/thumbs/${e.id}.jpg`)}" alt="" class="thumb">
+                        <img src="${path.join(pathMusicUser,`thumbs/${e.id}.jpg`)}" alt="" class="thumb">
                     </div>
                     <h3 class="title">${t}</h3>
                     <h5 class="uploader">Playlist</h5>
@@ -253,7 +254,7 @@ async function initListBox(dom,title,arrayMusic,id = undefined,onlyThisPL=false)
                         <i class="fa-solid fa-play"></i>
                     </div>
                     <div class="thumb-box">
-                        <img src="${path.join(pathApp,`./asset/media/thumbs/${e.id}.jpg`)}" alt="" class="thumb">
+                        <img src="${path.join(pathMusicUser,`thumbs/${e.id}.jpg`)}" alt="" class="thumb">
                     </div>
                     <h3 class="title">${e.title}</h3>
                     <h5 class="uploader">${e.uploader}</h5>
@@ -346,17 +347,26 @@ function sanitizeFileName(fileName) {
     return sanitizedFileName;
 }
 
-async function downInfoVideo(link) {
+async function downInfoVideo(link,isPL) {
+    let optionPL = isPL?"":'--no-playlist'
+    if (isPL==true || link.includes("/playlist")) {
+        alert("đang phát triển")
+        return null
+    }
+    // `yt-dlp --flat-playlist --print url ???`
     try {
         return new Promise((resolve, reject) => {
-            execFile(LIB.WIN.ytdlp, ['--dump-json',`--no-playlist`, `${link}`], async (error, stdout, stderr) => {
+            execFile(LIB.WIN.ytdlp, ['--dump-json',optionPL, `${link}`], async (error, stdout, stderr) => {
+                stdout = stdout.replaceAll(`{"id":`,`,{"id":`)
+                stdout = stdout.slice(1)
                 if (error) {
                     // console.error('Error:', error)
                     resolve(null)
                     reject(error);
                     return
                 } else {
-                    resolve(await JSON.parse(stdout));                    
+                    
+                    resolve(await JSON.parse(`[${stdout}]`));                    
                     
                 }
             });
@@ -380,7 +390,7 @@ async function downSubsVideo(id) {
                 "--convert-subs", "srt",
                 `--skip-download`,
                 "--output",
-                path.join(pathApp,"/asset/media/subs/${id}.%(ext)s"),
+                path.join(pathMusicUser,`subs/${id}.%(ext)s`),
                 `https://youtu.be/${id}`],
                 (error, stdout, stderr) => {
                     if (error) {
@@ -418,7 +428,7 @@ async function downAudioVideo(id) {
                 '--no-playlist',
                 '--audio-format', 'mp3',
                 '--format', 'bestaudio/best',
-                '--output', path.join(pathApp,`asset/media/${id}.%(ext)s`),
+                '--output', path.join(pathMusicUser,`${id}.%(ext)s`),
                 `https://youtu.be/${id}`
             ], (error, stdout, stderr) => {
                 if (error) {
@@ -448,18 +458,18 @@ async function scanAllMusic() {
     const pl = []
     
     return new Promise(async (resolve, reject) => {        
-        const pathFiles = path.join(pathApp,"/asset/media/infos")
+        const pathFiles = path.join(pathMusicUser,"infos")
         const infoFiles = fs.readdirSync(pathFiles).filter(file => file.endsWith('.json'));
         for (const file of infoFiles) {
             pl.push(new Promise(async (resolve, reject) => {
-                fs.readFile(path.join(pathApp,"/asset/media/infos/"+file),"utf-8" ,async (err,data)=>{
+                fs.readFile(path.join(pathMusicUser,"infos/"+file),"utf-8" ,async (err,data)=>{
                     if (err) {
                         reject(err)                        
                         return
                     }            
                     const af = await JSON.parse(data)
                     af.lang= af.language || langdetect.detectOne(af.description)
-                    // console.log(af.lang)
+                    // console.log(af)
                     af.mLyric = await getSub(af.id) || []
                     resolve(af)
                     }
@@ -478,9 +488,9 @@ async function getSub(id,lang=null){
     try {
         return new Promise(async (resolve, reject) => {
             for (let i of (lang)?[lang]:["vi","en-US","en","jp"]) {
-                const pathSub = fs.existsSync(path.resolve(pathApp,`asset/media/subs/${id}.${i}.srt`))
+                const pathSub = fs.existsSync(path.resolve(pathMusicUser,`subs/${id}.${i}.srt`))
                 if (pathSub) {
-                    fs.readFile(path.resolve(pathApp,`asset/media/subs/${id}.${i}.srt`), 'utf8',async  (err, data) => {
+                    fs.readFile(path.resolve(pathMusicUser,`subs/${id}.${i}.srt`), 'utf8',async  (err, data) => {
                         if (err) {
                             
                             console.error('Error:', err);
@@ -514,7 +524,7 @@ async function downloadImg(link,id) {
       const imageData = Buffer.from(response.data, 'binary');
   
       // Đường dẫn và tên file để lưu ảnh xuống ổ đĩa
-      const filePath = path.join(pathApp,`asset/media/thumbs/${id}.jpg`);
+      const filePath = path.join(pathMusicUser,`thumbs/${id}.jpg`);
   
       // Ghi dữ liệu ảnh vào file
       

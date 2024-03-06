@@ -738,6 +738,17 @@ ul li:hover{
     font-size: 1.2rem;
 }
 
+#ip-link-check-pl{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 5px;
+}
+
+#ip-link-check-pl > *{
+    cursor: pointer;
+}
+
 #ip-col-r{
     flex: .4;
 }

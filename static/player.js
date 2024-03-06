@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 // const app = ipcRenderer.sendSync('getApp');
 const pathApp = ipcRenderer.sendSync('getApp')
+const pathMusicUser = ipcRenderer.sendSync('getMusicUser')
 
 class Player extends Audio{
     playlist = [];
@@ -12,7 +13,7 @@ class Player extends Audio{
         this.volume = 0.5
         this.playlist = pl
         if (pl.length != 0) {
-            this.src = path.join(pathApp,`./asset/media/${this.playlist[0].id}.mp3`)
+            this.src = path.join(pathMusicUser,`${this.playlist[0].id}.mp3`)
         }
         document.onkeydown = (e)=>{
             // console.log(e.key)
@@ -134,14 +135,14 @@ class Player extends Audio{
         if (index<0) {
             this.pause()
             this.index = (this.index - 1 < 0)?this.playlist.length-1:this.index - 1
-            this.src = path.join(pathApp,`./asset/media/${this.playlist[this.index].id}.mp3`)
+            this.src = path.join(pathMusicUser,`${this.playlist[this.index].id}.mp3`)
             this.play()
             this.refresh()
         }
         if (index>0) {
             this.pause()
             this.index = (this.index + 1 > this.playlist.length-1 )?0:this.index + 1
-            this.src = path.join(pathApp,`./asset/media/${this.playlist[this.index].id}.mp3`)
+            this.src = path.join(pathMusicUser,`${this.playlist[this.index].id}.mp3`)
             this.play()
             this.refresh()
         }
@@ -154,7 +155,7 @@ class Player extends Audio{
     changePlayPL(index) {
         this.pause()
         this.index = index
-        this.src = path.join(pathApp,`./asset/media/${this.playlist[this.index].id}.mp3`)
+        this.src = path.join(pathMusicUser,`${this.playlist[this.index].id}.mp3`)
         this.play()
         this.refresh()
     }
@@ -165,11 +166,11 @@ class Player extends Audio{
         this.DOMCtrl.icon.className = "fa-solid fa-pause"
 
         if ("src" in this.DOMInfo.thumb) {
-            this.DOMInfo.thumb.src = path.join(pathApp,`./asset/media/thumbs/${this.playlist[this.index].id}.jpg`)            
+            this.DOMInfo.thumb.src = path.join(pathMusicUser,`thumbs/${this.playlist[this.index].id}.jpg`)            
         }
 
         if ("src" in this.DOMInfo.thumbMain) {
-            this.DOMInfo.thumbMain.src = path.join(pathApp,`./asset/media/thumbs/${this.playlist[this.index].id}.jpg`)            
+            this.DOMInfo.thumbMain.src = path.join(pathMusicUser,`thumbs/${this.playlist[this.index].id}.jpg`)            
         }
 
         if ("innerText" in this.DOMInfo.title) {
@@ -205,7 +206,7 @@ class Player extends Audio{
         this.index = index
         this.pause()
         if (this.playlist.length != 0) {
-            this.src = path.join(pathApp,`./asset/media/${this.playlist[index].id}.mp3`)
+            this.src = path.join(pathMusicUser,`${this.playlist[index].id}.mp3`)
         }
         this.refresh()        
         this.initPlaylist(this.DOMCtrl.playlist,pl,this.index)
@@ -326,7 +327,7 @@ class Player extends Audio{
             html+=`    
             <li class="flex p-main-pl-item ${index == i?"active":""}">
                 <div class="flex p-main-pl-item-thumb-box">
-                    <img src="${path.join(pathApp,`./asset/media/thumbs/${e.id}.jpg`)}" alt="" srcset="">
+                    <img src="${path.join(pathMusicUser,`thumbs/${e.id}.jpg`)}" alt="" srcset="">
                 </div>
                 <div class="flex-col p-main-pl-item-info">
                     <h5>${e.title}</h5>
